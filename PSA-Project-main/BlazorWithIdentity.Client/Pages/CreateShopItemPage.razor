@@ -1,0 +1,82 @@
+﻿@page "/create-shop-item"
+@using Project.Frontend.Website.Services;
+@layout Shared.MainLayout
+@inject NavigationManager navigationManager
+@inject IAuthenticationService authenticationService
+@inject IWebsiteHttpClient webHttpClient
+
+<PageTitle>Create Shop Item</PageTitle>
+
+<h1 class="text-center">
+    Register:
+</h1>
+
+<div class="container mt-md-5">
+    <div class="row justify-content-md-center">
+        <div class="col-sm-6">
+            <div class="card">
+                <div class="card-header">
+                    <h1 class="h2 text-center">Pridėti Prekę</h1>
+                </div>
+                <div class="card-body">
+                    <EditForm class="form-signin" OnValidSubmit="OnSubmit" Model="createShopItemParameters">
+                        <DataAnnotationsValidator />
+
+                        <div class="form-floating mb-3">
+                            <InputText id="inputName" class="form-control" @bind-Value="createShopItemParameters.Name" autofocus placeholder="" />
+                            <label for="inputName">Pavadinimas</label>
+                            <ValidationMessage For="@(() => createShopItemParameters.Name)" />
+                        </div>
+
+                        
+                        <div class="form-floating mb-3">
+                            <InputNumber id="inputPrice" class="form-control" @bind-Value="createShopItemParameters.Price" autofocus placeholder="" />
+                            <label for="inputPrice">Kaina</label>
+                            <ValidationMessage For="@(() => createShopItemParameters.Price)" />
+                        </div>
+
+
+                        <div class="form-floating mb-3">
+                            <InputNumber id="inputCount" class="form-control" @bind-Value="createShopItemParameters.Count" autofocus placeholder="" />
+                            <label for="inputCount">Kiekis</label>
+                            <ValidationMessage For="@(() => createShopItemParameters.Count)" />
+                        </div>
+
+
+
+                        <div class="form-floating mb-3">
+                            <InputText id="inputDescription" class="form-control" @bind-Value="createShopItemParameters.Description" autofocus placeholder="" />
+                            <label for="inputDescription">Aprašymas</label>
+                            <ValidationMessage For="@(() => createShopItemParameters.Name)" />
+                        </div>
+
+                        <div class="d-grid gap-2">
+                            <button class="btn btn-lg btn-primary btn-block" type="submit">Kurti Prekę</button>
+                        </div>
+
+                        <label class="text-danger">@error</label>
+                    </EditForm>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    CreateShopItemRequest createShopItemParameters { get; set; } = new CreateShopItemRequest();
+    string error { get; set; }
+
+    async Task OnSubmit()
+    {
+        error = null;
+        try
+        {
+            await webHttpClient.DoPostAsync(createShopItemParameters, "api/shopItems");
+            navigationManager.NavigateTo("/");
+        }
+        catch (Exception ex)
+        {
+            error = ex.Message;
+        }
+    }
+}

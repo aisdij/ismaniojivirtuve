@@ -1,0 +1,23 @@
+﻿@page "/"
+@using Project.Frontend.Website.Componenets
+@using Project.Frontend.Website.Services;
+@layout Shared.MainLayout
+@inject IWebsiteHttpClient webHttpClient
+
+<PageTitle>Shop Item List</PageTitle>
+
+<div class="d-flex flex-wrap-reverse">
+    @foreach (var shopItem in ShopItems)
+    {
+        <ShopItemListItemComponent ShopItem=@shopItem/>
+    }
+</div>
+
+@code{
+    public List<ShopItemResponse> ShopItems { get; set; } = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        ShopItems = await webHttpClient.DoGetAsync<List<ShopItemResponse>>("api/shopItems");
+    }
+}

@@ -1,0 +1,40 @@
+@page "/order-cancelation/{id}"
+@using Project.Frontend.Website.Componenets
+@using Project.Frontend.Website.Services
+@layout Shared.MainLayout
+@inject NavigationManager NavigationManager
+@inject IWebsiteHttpClient webHttpClient
+
+<PageTitle>Užsakymo atšaukimas</PageTitle>
+
+<div class="d-flex flex-wrap-reverse">
+    @if (showSuccess)
+    {
+        <div class="alert alert-success" role="alert">
+            Užsakymas atšauktas
+        </div>
+    }
+    <h2>Ar tikrai norite atšaukti šį užskymą?</h2>
+    <button @onclick="ConfirmCancellation">Atšaukti</button>
+</div>
+
+@code {
+    [Parameter] public string id { get; set; }
+    public OrderResponse Order { get; set; } = new();
+    bool showSuccess = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        Order = await webHttpClient.DoGetAsync<OrderResponse>($"api/order/{id}");
+    }
+
+    private async Task ConfirmCancellation()
+    {
+        var response = await webHttpClient.DoGetAsync<OrderResponse>($"api/order/cancel/{id}");
+
+        if (response != null)
+        {
+            showSuccess = true;
+        }
+    }
+}

@@ -1,0 +1,92 @@
+﻿@page "/register"
+@layout Shared.LoginLayout
+@inject NavigationManager navigationManager
+@inject IAuthenticationService authenticationService
+
+<PageTitle>Register</PageTitle>
+
+<h1 class="text-center">
+    Register:
+</h1>
+
+<div class="container mt-md-5">
+    <div class="row justify-content-md-center">
+        <div class="col-sm-6">
+            <div class="card">
+                <div class="card-header">
+                    <h1 class="h2 text-center">Create Account</h1>
+                </div>
+                <div class="card-body">
+                    <EditForm class="form-signin" OnValidSubmit="OnSubmit" Model="registerParameters">
+                        <DataAnnotationsValidator />
+
+                        <div class="form-floating mb-3">
+                            <InputText id="inputEmail" class="form-control" @bind-Value="registerParameters.Email" autofocus placeholder="EmailAddress" />
+                            <label for="inputUsername">Email</label>
+                            <ValidationMessage For="@(() => registerParameters.Email)" />
+                        </div>
+
+                        <div class="form-floating mb-3">
+                            <InputText id="inputEmail" class="form-control" @bind-Value="registerParameters.FirstName" autofocus placeholder="EmailAddress" />
+                            <label for="inputUsername">First Name</label>
+                            <ValidationMessage For="@(() => registerParameters.FirstName)" />
+                        </div>
+
+                        <div class="form-floating mb-3">
+                            <InputText id="inputEmail" class="form-control" @bind-Value="registerParameters.LastName" autofocus placeholder="EmailAddress" />
+                            <label for="inputUsername">Last Name</label>
+                            <ValidationMessage For="@(() => registerParameters.LastName)" />
+                        </div>
+
+                        <div class="form-floating mb-3">
+                            <InputText id="inputEmail" class="form-control" @bind-Value="registerParameters.Gender" autofocus placeholder="Gender" />
+                            <label for="inputGender">Gender</label>
+                            <ValidationMessage For="@(() => registerParameters.Gender)" />
+                        </div>
+
+                        <div class="form-floating mb-3">
+                            <InputText type="password" id="inputPassword" class="form-control" placeholder="Password" @bind-Value="registerParameters.Password" />
+                            <label for="inputPassword">Password</label>
+                            <ValidationMessage For="@(() => registerParameters.Password)" />
+                        </div>
+
+                        <div class="form-floating mb-3">
+                            <InputText type="password" id="inputPasswordConfirm" class="form-control" placeholder="Password Confirmation" @bind-Value="registerParameters.PasswordConfirm" />
+                            <label for="inputPasswordConfirm">Password Confirmation</label>
+                            <ValidationMessage For="@(() => registerParameters.PasswordConfirm)" />
+                        </div>
+
+                        <div class="d-grid gap-2">
+                            <button class="btn btn-lg btn-primary btn-block" type="submit">Create account</button>
+                        </div>
+
+                        <label class="text-danger">@error</label>
+
+                        <NavLink href="login">
+                            <h6 class="font-weight-normal text-center">Already have an account? Click here to login</h6>
+                        </NavLink>
+                    </EditForm>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    RegisterRequest registerParameters { get; set; } = new RegisterRequest();
+    string error { get; set; }
+
+    async Task OnSubmit()
+    {
+        error = null;
+        try
+        {
+            await authenticationService.RegisterAsync(registerParameters);
+            navigationManager.NavigateTo("");
+        }
+        catch (Exception ex)
+        {
+            error = ex.Message;
+        }
+    }
+}

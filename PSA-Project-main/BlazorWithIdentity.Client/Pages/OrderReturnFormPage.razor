@@ -1,0 +1,52 @@
+﻿@page "/order-return-form/{orderId}"
+@inject HttpClient webHttpClient
+@inject NavigationManager Navigation
+
+<PageTitle>Return Order</PageTitle>
+
+<h3>Užsakymo grąžinimas</h3>
+
+@if (!isOrderLoaded)
+{
+    <p><em>Loading...</em></p>
+}
+else if (order == null)
+{
+    <p>Order not found.</p>
+}
+else
+{
+    <p>Order ID: @order.Id</p>
+    <p>Order Status: @order.fkOrderStatus</p>
+    <p>Order Date: @order.OrderDate.ToString("MM/dd/yyyy")</p>
+    <button @onclick="SubmitFrom">Return Order</button>
+}
+
+@code {
+    [Parameter]
+    public string orderId { get; set; }
+
+    private OrderResponse order;
+    private bool isOrderLoaded = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        order = await webHttpClient.GetFromJsonAsync<OrderResponse>($"api/order/{orderId}");
+        isOrderLoaded = true;
+    }
+
+    private async Task SubmitFrom()
+    {
+        var response = await webHttpClient.PostAsJsonAsync($"api/order/submit-item-return/{order.Id}", new { });
+        if (response.IsSuccessStatusCode)
+        {
+            Navigation.NavigateTo("/order-list");
+        }
+        else
+        {
+            var errorMessage = await response.Content.ReadAsStringAsync();
+            Console.WriteLine($"Error: {errorMessage}");
+            // Optionally display an error message to the user
+        }
+    }
+}

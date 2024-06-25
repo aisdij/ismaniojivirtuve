@@ -1,0 +1,82 @@
+﻿@using Project.Frontend.Website.Services;
+@using Project.Shared.AuthenticationShared;
+
+@inject IAuthenticationService authenticationService
+@inject NavigationManager navigationManager
+@inject IWebsiteHttpClient webHttpClient
+
+<a href="/courier-order/@Order.Id">
+    <div class="card" style="width: 18rem;">
+        <div class="card-body">
+            @if (isEditing)
+            {
+                <select @bind="selectedStatusString" class="form-control">
+                    @foreach (var status in Enum.GetValues<OrderStatus>())
+                    {
+                        <option value="@status.ToString()">@status</option>
+                    }
+                </select>
+                <button @onclick="SaveStatus" class="btn btn-primary mt-2">Save</button>
+                <button @onclick="CancelEdit" class="btn btn-secondary mt-2">Cancel</button>
+            }
+            else
+            {
+                <h5 class="card-title">@Order.fkOrderStatus</h5>
+                <p class="card-text">Adresas: @Order.Adress, @Order.City, @Order.PostalCode, @Order.FlatNumber</p>
+                <p class="card-text">@Order.AdditionalInfo</p>
+                <p class="card-text">@Order.fkOrderType</p>
+                <p class="card-text">Užsakymo data: @Order.OrderDate</p>
+                <button @onclick="EnableEdit" class="btn btn-primary mt-2">Redaguoti užsakymo būseną</button>
+            }
+        </div>
+    </div>
+</a>
+
+@code {
+    [Parameter] public required OrderResponse Order { get; set; }
+
+    public string Role = "";
+    private bool isEditing = false;
+    private string selectedStatusString;
+
+    protected async override Task OnInitializedAsync()
+    {
+        Role = await authenticationService.GetClaimValue(CustomJwtClaims.Role);
+        selectedStatusString = Order.fkOrderStatus.ToString();
+    }
+
+    private void EnableEdit()
+    {
+        isEditing = true;
+    }
+
+    private void CancelEdit()
+    {
+        isEditing = false;
+        selectedStatusString = Order.fkOrderStatus.ToString();
+    }
+
+    private async Task SaveStatus()
+    {
+        if (Enum.TryParse<OrderStatus>(selectedStatusString, out var newStatus))
+        {
+            Order.fkOrderStatus = newStatus;
+            UpdateOrderRequest request = new() { Id = Order.Id, fkOrderStatus = newStatus };
+
+            try
+            {
+                await webHttpClient.DoPostAsync(request, "api/courier-order/update");
+                isEditing = false;
+                navigationManager.NavigateTo("/courier-order-list");
+            }
+            catch (HttpRequestException ex)
+            {
+                Console.WriteLine($"Error updating order: {ex.Message}");
+            }
+        }
+        else
+        {
+            Console.WriteLine("Invalid status selected.");
+        }
+    }
+}

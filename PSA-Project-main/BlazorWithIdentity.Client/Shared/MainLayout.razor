@@ -1,0 +1,39 @@
+﻿@inherits LayoutComponentBase
+@inject NavigationManager navigationManager
+@inject IAuthenticationService authenticationService
+
+<PageTitle>Main Layout</PageTitle>
+
+<div class="page">
+        <div class="sidebar">
+            <NavMenu />
+        </div>
+
+        <main>
+            <div class="top-row px-4">
+                <button type="button" class="btn btn-link" @onclick="@LogoutClick">Logout</button>
+            </div>
+
+            <article class="content px-4">
+                @Body
+            </article>
+        </main>
+</div>
+
+
+@code {
+    LoginResponse? userInfo;
+
+    protected override async Task OnInitializedAsync()
+    {
+       userInfo = await authenticationService.GetUserInfo();
+       if(userInfo == null)
+            navigationManager.NavigateTo("/login");
+    }
+
+    async Task LogoutClick()
+    {
+        await authenticationService.LogoutAsync();
+        navigationManager.NavigateTo("/login");
+    }
+}

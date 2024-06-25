@@ -1,0 +1,92 @@
+﻿@page "/update-shop-item/{id}"
+@using Project.Frontend.Website.Services;
+@layout Shared.MainLayout
+@inject NavigationManager navigationManager
+@inject IAuthenticationService authenticationService
+@inject IWebsiteHttpClient webHttpClient
+
+<PageTitle>Change Shop Item</PageTitle>
+
+<div class="container mt-md-5">
+    <div class="row justify-content-md-center">
+        <div class="col-sm-6">
+            <div class="card">
+                <div class="card-header">
+                    <h1 class="h2 text-center">Redaguoti Prekę</h1>
+                </div>
+                <div class="card-body">
+                    <EditForm class="form-signin" OnValidSubmit="OnSubmit" Model="updateShopItemParameters">
+                        <DataAnnotationsValidator />
+
+                        <div class="form-floating mb-3">
+                            <InputText id="inputName" class="form-control" @bind-Value="updateShopItemParameters.Name" autofocus placeholder="" />
+                            <label for="inputName">Pavadinimas</label>
+                            <ValidationMessage For="@(() => updateShopItemParameters.Name)" />
+                        </div>
+
+                        
+                        <div class="form-floating mb-3">
+                            <InputNumber id="inputPrice" class="form-control" @bind-Value="updateShopItemParameters.Price" autofocus placeholder="" />
+                            <label for="inputPrice">Kaina</label>
+                            <ValidationMessage For="@(() => updateShopItemParameters.Price)" />
+                        </div>
+
+
+                        <div class="form-floating mb-3">
+                            <InputNumber id="inputCount" class="form-control" @bind-Value="updateShopItemParameters.Count" autofocus placeholder="" />
+                            <label for="inputCount">Kiekis</label>
+                            <ValidationMessage For="@(() => updateShopItemParameters.Count)" />
+                        </div>
+
+
+
+                        <div class="form-floating mb-3">
+                            <InputText id="inputDescription" class="form-control" @bind-Value="updateShopItemParameters.Description" autofocus placeholder="" />
+                            <label for="inputDescription">Aprašymas</label>
+                            <ValidationMessage For="@(() => updateShopItemParameters.Name)" />
+                        </div>
+
+                        <div class="d-grid gap-2">
+                            <button class="btn btn-lg btn-primary btn-block" type="submit">Išsaugoti pakeitimus</button>
+                        </div>
+
+                        <label class="text-danger">@error</label>
+                    </EditForm>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter] public string id { get; set; }
+    UpdateShopItemRequest updateShopItemParameters { get; set; } = new UpdateShopItemRequest();
+    string error { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        var response = await webHttpClient.DoGetAsync<ShopItemResponse>($"api/shopItems/{id}");
+        updateShopItemParameters = new()
+            {
+                Id = response.Id,
+                Name = response.Name,
+                Price = response.Price,
+                Count = response.Count,
+                Description = response.Description,
+            };
+    }
+
+    async Task OnSubmit()
+    {
+        error = null;
+        try
+        {
+            await webHttpClient.DoPostAsync(updateShopItemParameters, "api/shopItems/update");
+            navigationManager.NavigateTo("/");
+        }
+        catch (Exception ex)
+        {
+            error = ex.Message;
+        }
+    }
+}

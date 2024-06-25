@@ -1,0 +1,55 @@
+﻿@using Project.Shared.ResponseModels
+@inject HttpClient webHttpClient
+@inject NavigationManager NavigationManager
+@code {
+    [Parameter]
+    public OrderResponse Order { get; set; }
+    [Parameter]
+    public EventCallback<string> OnOrderRemoved { get; set; }
+
+
+    private string returnMessage;
+
+    protected override void OnParametersSet()
+    {
+        returnMessage = string.Empty; // Clear any previous messages when parameters change
+    }
+    private async void ConfirmCancellation()
+    {
+        var response = await webHttpClient.GetAsync($"api/order/cancel/{Order.Id}");
+        await OnOrderRemoved.InvokeAsync(Order.Id);
+    }
+    private async void ConfirmReturn()
+    {
+        var response = await webHttpClient.GetAsync($"api/order/confirm-return/{Order.Id}");
+        await OnOrderRemoved.InvokeAsync(Order.Id);
+    }
+
+}
+
+<div class="order-item">
+    <p><strong>Total Price:</strong> @Order.TotalPrice</p>
+    <p><strong>Address:</strong> @Order.Adress</p>
+    <p><strong>City:</strong> @Order.City</p>
+    <p><strong>Postal Code:</strong> @Order.PostalCode</p>
+    <p><strong>Additional Info:</strong> @Order.AdditionalInfo</p>
+    <p><strong>Flat Number:</strong> @Order.FlatNumber</p>
+    <p><strong>Order Status:</strong> @Order.fkOrderStatus</p>
+    <p><strong>Order Date:</strong> @Order.OrderDate.ToString("MM/dd/yyyy")</p>
+    <button @onclick="ConfirmCancellation">Atšaukti grąžinimą</button>
+    <button @onclick="ConfirmReturn">Patvirtinti grąžinimą</button>
+    @if (!string.IsNullOrEmpty(returnMessage))
+    {
+        <p class="text-danger">@returnMessage</p>
+    }
+</div>
+
+<style>
+    .order-item {
+        border: 1px solid #ccc;
+        padding: 10px;
+        margin-bottom: 10px;
+    }
+</style>
+
+

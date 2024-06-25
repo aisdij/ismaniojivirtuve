@@ -1,0 +1,60 @@
+﻿@page "/lucky-wheel"
+@using Project.Frontend.Website.Componenets
+@using Project.Frontend.Website.Services
+@layout Shared.MainLayout
+@inject IWebsiteHttpClient webHttpClient
+
+<PageTitle>Laimės ratas</PageTitle>
+
+<div class="d-flex flex-wrap-reverse">
+    <div class="wheel-container">
+      <div class="arrow"></div>
+      <img src="resources/luckywheel.png" alt="Lucky Wheel" class="@GetSpinClass()" style="@GetSpinStyle()">
+    </div>
+    @if(nextWheelSpinTime == null) {
+        <div>
+            <button @onclick="OnSpinClick" type="button">Sukti laimės ratą!</button>
+        </div>
+    } else {
+        <div>
+                <h1>Kitas ratas bus galimas @nextWheelSpinTime.Value.ToShortDateString() @nextWheelSpinTime.Value.ToShortTimeString()</h1>
+        </div>
+    }
+</div>
+
+@code {
+    private bool isSpinning = false;
+    private bool isPressed = false;
+    private int luckyNumber = 5;
+    private string spinStyle = "paused";
+    private DateTime? nextWheelSpinTime = null;
+
+    private string GetSpinClass() => isSpinning ? "spin" : "";
+    private string GetSpinStyle() => $"animation: spin 1s linear {5 + luckyNumber*0.2 + 0.1} forwards; animation-play-state: {spinStyle};";
+
+    private async void OnSpinClick()
+    {
+        LuckyWheelResponse response = await webHttpClient.DoGetAsync<LuckyWheelResponse>("api/lucky-wheel");
+        luckyNumber = response.LuckyNumber;
+
+        if (luckyNumber == 0)
+        {
+            nextWheelSpinTime = response.LastTimeWheelSpin + TimeSpan.FromDays(1);
+            StateHasChanged();
+            return;
+        }
+
+        if (!isSpinning)
+        {
+            StartSpin();
+        }
+    }
+    private void StartSpin()
+    {
+        isSpinning = true;
+        isPressed = true;
+        spinStyle = "running";
+        StateHasChanged();
+    }
+}
+

@@ -1,0 +1,104 @@
+﻿@page "/confirm-payment/{order_id}"
+@using Project.Frontend.Website.Services;
+@layout Shared.MainLayout
+@inject NavigationManager navigationManager
+@inject IAuthenticationService authenticationService
+@inject IWebsiteHttpClient webHttpClient
+
+<PageTitle>Create Shop Item</PageTitle>
+
+<div class="container mt-md-5">
+    <div class="row justify-content-md-center">
+        <div class="col-sm-6">
+            <div class="card">
+                <div class="card-header">
+                    <h1 class="h2 text-center">Patvirtinti Apmokėjimą</h1>
+                </div>
+                <div class="card-body">
+                    <EditForm class="form-signin" OnValidSubmit="ConfirmPayment" Model="paymentRequest">
+                        <DataAnnotationsValidator />
+
+                        <div class="form-floating mb-3">
+                            <h2>Apmokėjimo kaina: @currentPrice</h2>
+                        </div>
+
+                        @if (orderDetails.DiscountPercentage > 0 && orderDetails.DiscountPointsUse > 0)
+                        {
+                            <div class="form-floating mb-3">
+                                <div>
+                                    <InputCheckbox id="inputUseDiscount" class="form-check-input" @bind-Value="paymentRequest.UseDiscount" />
+                                    <label for="inputUseDiscount">Naudoti Nuolaidą? (@orderDetails.DiscountPercentage % už @orderDetails.DiscountPointsUse Taškų?)</label>
+                                </div>
+                            </div>
+                            <br/>
+                        }
+
+                        <div class="form-floating mb-3">
+                            <InputText id="inputIban" class="form-control" @bind-Value="paymentRequest.IBAN" autofocus placeholder="" />
+                            <label for="inputIban">IBAN</label>
+                            <ValidationMessage For="@(() => paymentRequest.IBAN)" />
+                        </div>
+
+                        
+                        <div class="form-floating mb-3">
+                            <InputNumber id="inputIban" class="form-control" @bind-Value="paymentRequest.SecurityCode" autofocus placeholder="" />
+                            <label for="inputCVC">CVC</label>
+                            <ValidationMessage For="@(() => paymentRequest.SecurityCode)" />
+                        </div>
+
+
+                        <div class="form-floating mb-3">
+                            <InputText id="inputExpiration" class="form-control" @bind-Value="paymentRequest.Expiration" autofocus placeholder="" />
+                            <label for="inputExpiration">Expiration (MM/YY)</label>
+                            <ValidationMessage For="@(() => paymentRequest.Expiration)" />
+                        </div>
+
+                        <div class="d-grid gap-2">
+                            <button class="btn btn-lg btn-primary btn-block" type="submit">Patvirtinti Apmokėjimą</button>
+                        </div>
+
+                        <label class="text-danger">@error</label>
+                    </EditForm>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter] public string order_id { get; set; }
+    public double currentPrice { get; set; }
+    GetOrderPaymentResponse orderDetails { get; set; } = new();
+
+    DoOrderPaymentRequest paymentRequest { get; set; } = new DoOrderPaymentRequest();
+
+    string error { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            orderDetails = await webHttpClient.DoGetAsync<GetOrderPaymentResponse>($"api/order/payment/{order_id}"); ;
+        }
+        catch (Exception ex)
+        {
+            
+            throw ex;
+        }
+        currentPrice = orderDetails.Price;
+    }
+
+    async Task ConfirmPayment()
+    {
+        error = null;
+        try
+        {
+            await webHttpClient.DoPostAsync(paymentRequest, $"api/order/payment/{order_id}");
+            navigationManager.NavigateTo("/");
+        }
+        catch (Exception ex)
+        {
+            error = ex.Message;
+        }
+    }
+}

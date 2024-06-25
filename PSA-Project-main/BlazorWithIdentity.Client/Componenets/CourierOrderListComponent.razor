@@ -1,0 +1,16 @@
+﻿@inject IAuthenticationService authenticationService
+@using Project.Shared.AuthenticationShared
+
+<a href="/courier-order/@Order.Id">
+    <div class="card" style="width: 18rem;">
+        <div class="card-body">
+            <h5 class="card-title">@Order.OrderDate</h5>
+            <p class="card-text">@Order.Adress, @Order.City</p>
+            <p class="card-text">@Order.AdditionalInfo</p>
+        </div>
+    </div>
+</a>
+
+@code {
+    [Parameter] public required OrderResponse Order { get; set; }
+}

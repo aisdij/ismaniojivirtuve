@@ -1,0 +1,37 @@
+﻿@page "/courier-order-list"
+@using Project.Frontend.Website.Componenets
+@using Project.Frontend.Website.Services
+@using Project.Shared.ResponseModels
+@layout Shared.MainLayout
+@inject IWebsiteHttpClient webHttpClient
+@inject IJSRuntime JSRuntime
+
+<PageTitle>Order List</PageTitle>
+
+<div class="d-flex flex-wrap-reverse">
+    @foreach (var order in Orders)
+    {
+        <CourierOrderListComponent Order=@order />
+    }
+</div>
+<br>
+<br>
+<div id="map" style="height:500px;width:100%;"></div>
+
+@code {
+    public List<OrderResponse> Orders { get; set; } = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        Orders = await webHttpClient.DoGetAsync<List<OrderResponse>>("api/courier-order");
+        //Orders = Orders.Where(o => o.fkOrderStatus.ToString() == "Waiting").ToList();
+        await JSRuntime.InvokeVoidAsync("initialize");
+
+        if (Orders != null && Orders.Count > 0)
+        {
+            var ordersJson = System.Text.Json.JsonSerializer.Serialize(Orders);
+            await JSRuntime.InvokeVoidAsync("calculateAndDisplayRoute", ordersJson);
+        }
+  
+    }
+}

@@ -1,0 +1,21 @@
+﻿@page "/courier-order/{id}"
+@using Project.Frontend.Website.Componenets
+@using Project.Frontend.Website.Services;
+@layout Shared.MainLayout
+@inject IWebsiteHttpClient webHttpClient
+
+<PageTitle>Order</PageTitle>
+
+<div class="d-flex flex-wrap-reverse">
+    <CourierOrderComponent Order=@Order />
+</div>
+
+@code {
+    [Parameter] public string id { get; set; }
+    public OrderResponse Order { get; set; } = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        Order = await webHttpClient.DoGetAsync<OrderResponse>($"api/courier-order/{id}");
+    }
+}

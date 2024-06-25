@@ -1,0 +1,35 @@
+﻿@page "/return-item-list"
+@using Project.Frontend.Website.Componenets
+@using Project.Frontend.Website.Services
+@layout Shared.MainLayout
+@inject IWebsiteHttpClient webHttpClient
+
+<PageTitle>Grąžinimai</PageTitle>
+
+<div class="d-flex flex-wrap-reverse">
+    @if (Orders.Count > 0)
+    {
+        @foreach (var order in Orders)
+        {
+                            <ReturnOrderComponent Order=@order OnOrderRemoved="HandleOrderRemoved"/>
+        }
+    }
+    else
+    {
+            <h1>Nėra užsakymų</h1>
+    }
+</div>
+
+@code {
+    public List<OrderResponse> Orders { get; set; } = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        Orders = await webHttpClient.DoGetAsync<List<OrderResponse>>("api/order/returns");
+    }
+    private async Task HandleOrderRemoved(string orderId)
+    {
+        Orders.RemoveAll(o => o.Id == orderId);
+        StateHasChanged(); // Refresh the UI
+    }
+}

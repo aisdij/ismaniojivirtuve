@@ -1,0 +1,79 @@
+﻿@using Project.Shared.AuthenticationShared;
+@inject IAuthenticationService authenticationService﻿
+
+<div class="top-row ps-3 navbar navbar-dark">
+    <div class="container-fluid">
+        <a class="navbar-brand" href="">Išmanioji Virtuvė</a>
+        <button title="Navigation menu" class="navbar-toggler" @onclick="ToggleNavMenu">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+    </div>
+</div>
+
+<div class="nav-scrollable" @onclick="ToggleNavMenu">
+    <nav class="flex-column">
+        @if (Role != "Kurjeris")
+        {
+            <div class="nav-item px-3">
+                <NavLink class="nav-link" href="/" Match="NavLinkMatch.All">
+                    <span class="oi oi-home" aria-hidden="true"></span> Peržiūrėti Prekes
+                </NavLink>
+            </div>
+            <div class="nav-item px-3">
+                <NavLink class="nav-link" href="/cart-items" Match="NavLinkMatch.All">
+                    <span class="oi oi-home" aria-hidden="true"></span> Tvarkyti Prekių Krepšelį
+                </NavLink>
+            </div>
+            <div class="nav-item px-3">
+                <NavLink class="nav-link" href="/order-list" Match="NavLinkMatch.All">
+                    <span class="oi oi-home" aria-hidden="true"></span> Užsakymai
+                </NavLink>
+            </div>
+             <div class="nav-item px-3">
+                <NavLink class="nav-link" href="/lucky-wheel" Match="NavLinkMatch.All">
+                    <span class="oi oi-home" aria-hidden="true"></span> Laimės ratas
+                </NavLink>
+            </div>
+        }
+        @if (Role == "Admin")
+        {
+            <div class="nav-item px-3">
+                <NavLink class="nav-link" href="/create-shop-item">
+                    <span class="oi oi-plus" aria-hidden="true"></span> Pridėti prekę
+                </NavLink>
+            </div>
+            <div class="nav-item px-3">
+                    <NavLink class="nav-link" href="/return-item-list">
+                    <span class="oi oi-plus" aria-hidden="true"></span> Peržiūrėti grąžinimus
+                </NavLink>
+            </div>
+        }
+        @if (Role == "Kurjeris")
+        {
+            <div class="nav-item px-3">
+                <NavLink class="nav-link" href="/courier-order-list">
+                    <span class="oi oi-home" aria-hidden="true"></span> Peržiūrėti užsakymus
+                </NavLink>
+            </div>
+        }
+    </nav>
+</div>
+
+@code {
+    public string Role = "";
+
+    private bool collapseNavMenu = true;
+
+    // private string? NavMenuCssClass => collapseNavMenu ? "collapse" : null;
+
+    protected async override Task OnInitializedAsync()
+    {
+        
+        Role = await authenticationService.GetClaimValue(CustomJwtClaims.Role);
+    }
+
+    private void ToggleNavMenu()
+    {
+        collapseNavMenu = !collapseNavMenu;
+    }
+}

@@ -1,0 +1,71 @@
+﻿@using Project.Frontend.Website.Services;
+@using Project.Shared.AuthenticationShared;
+@using Project.Shared.RequestModels;
+
+@inject IAuthenticationService authenticationService
+@inject NavigationManager navigationManager
+@inject IWebsiteHttpClient webHttpClient
+
+<div class="d-inline" style="width: 18rem;">
+    <div class="card-body">
+        <h5 class="card-title">@CartItem.ShopItemName</h5>
+        <h5 class="card-title">Kiekis: @CartItem.Count</h5>
+        <button @onclick="DecreaseItemCount">-</button>
+        <button @onclick="RemoveCartItem">Pašalinti</button>
+        <button @onclick="IncreaseItemCount">+</button>
+    </div>
+</div>
+
+@code {
+    [Parameter] public required CartItemResponse CartItem { get; set; }
+    AddCartItemRequest cartItemRequest { get; set; } = new AddCartItemRequest();
+
+    public string Role = "";
+
+    protected async override Task OnInitializedAsync()
+    {
+        Role = await authenticationService.GetClaimValue(CustomJwtClaims.Role);
+    }
+
+    public async Task RemoveCartItem()
+    {
+        DeleteCartItemRequest request = new() { Id = CartItem.Id };
+
+        await webHttpClient.DoPostAsync(request, "api/cartItems/delete");
+        navigationManager.NavigateTo(navigationManager.Uri, forceLoad: true);
+    }
+
+    public async Task IncreaseItemCount()
+    {
+        UpdateCartItemRequest request = new UpdateCartItemRequest
+        {
+            Id = CartItem.Id,
+            Count = CartItem.Count + 1
+        };
+
+        await webHttpClient.DoPostAsync(request, "api/cartItems/update");
+        navigationManager.NavigateTo(navigationManager.Uri, forceLoad: true);
+    }
+
+    public async Task DecreaseItemCount()
+    {
+        if (CartItem.Count > 1)
+        {
+            UpdateCartItemRequest request = new UpdateCartItemRequest
+            {
+                Id = CartItem.Id,
+                Count = CartItem.Count - 1
+            };
+
+            await webHttpClient.DoPostAsync(request, "api/cartItems/update");
+            navigationManager.NavigateTo(navigationManager.Uri, forceLoad: true);
+        }
+        else
+        {
+            DeleteCartItemRequest request = new() { Id = CartItem.Id };
+
+            await webHttpClient.DoPostAsync(request, "api/cartItems/delete");
+            navigationManager.NavigateTo(navigationManager.Uri, forceLoad: true);
+        }
+    }
+}

@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <title>Unknown Error</title>
+    <base href="/" />
+    <link href="css/bootstrap/bootstrap.min.css" rel="stylesheet" />
+    <link href="css/app.css" rel="stylesheet" />
+    <link rel="icon" type="image/png" href="favicon.png" />
+    <link href="Project.Frontend.Website.styles.css" rel="stylesheet" />
+    <!--AIzaSyCkaW_ce--QJtD_7k0-hLI4934H7vy_8-8-->
+    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCkaW_ce--QJtD_7k0-hLI4934H7vy_8-8&libraries=places&callback=initialize" async defer></script>
+    <script type="module">
+        import { geneticAlgorithm, displayRoute } from './geneticAlgorithm.js';
+
+        var map, directionsService, directionsRenderer, geocoder, userLocation;
+        window.initialize = function () {
+            var latlng = new google.maps.LatLng(40.716948, -74.003563);
+            var options = {
+                zoom: 14,
+                center: latlng,
+                mapTypeId: google.maps.MapTypeId.ROADMAP
+            };
+            map = new google.maps.Map(document.getElementById("map"), options);
+            directionsService = new google.maps.DirectionsService();
+            directionsRenderer = new google.maps.DirectionsRenderer();
+            geocoder = new google.maps.Geocoder();
+            directionsRenderer.setMap(map);
+            getUserLocation().then(function (position) {
+                userLocation = {
+                    lat: position.coords.latitude,
+                    lng: position.coords.longitude
+                };
+                map.setCenter(new google.maps.LatLng(userLocation.lat, userLocation.lng));
+            })
+        };
+
+        function getUserLocation() {
+            return new Promise(function (resolve, reject) {
+                if (navigator.geolocation) {
+                    navigator.geolocation.getCurrentPosition(resolve, reject);
+                }
+            });
+        }
+
+        function geocodeAddress(address) {
+            return new Promise((resolve, reject) => {
+                geocoder.geocode({ address: address }, (results, status) => {
+                    if (status === 'OK') {
+                        resolve(results[0].geometry.location);
+                    }
+                });
+            });
+        }
+
+        window.calculateAndDisplayRoute = async function (ordersJson) {
+
+            if (!ordersJson || ordersJson.trim() === "") {
+                console.log("Orders JSON is empty.");
+                return;
+            }
+
+            try {
+                var orders = JSON.parse(ordersJson);
+
+                var waypoints = [];
+                for (let order of orders) {
+                    let address = `${order.Adress}, ${order.City}, ${order.PostalCode}`;
+                    try {
+                        let location = await geocodeAddress(address);
+                        waypoints.push({
+                            location: { lat: location.lat(), lng: location.lng() },
+                            stopover: true
+                        });
+                    } catch (error) {
+                        console.error(`Failed to geocode address '${address}': ${error}`);
+                    }
+                }
+                getUserLocation().then(function (position) {
+                    userLocation = {
+                        lat: position.coords.latitude,
+                        lng: position.coords.longitude
+                    };
+                    var origin = userLocation;
+                    var bestRoute = geneticAlgorithm(waypoints, origin, { lat: 54.8985, lng: 23.9036 });
+                    displayRoute(bestRoute, origin, { lat: 54.8985, lng: 23.9036 }, directionsService, directionsRenderer, google.maps.TravelMode.WALKING);
+                }).catch(function (error) {
+                    console.log("Failed to get user location for route calculation:", error);
+                });
+            } catch (e) {
+                console.error("Error parsing orders JSON:", e);
+            }
+        };
+
+        document.addEventListener("DOMContentLoaded", function () {
+            if (typeof google !== 'undefined' && google.maps) {
+                initialize();
+            }
+        });
+            
+
+    </script>
+
+    <script>
+        function startSpinning(elementId) {
+            var element = document.getElementById(elementId);
+            if (element) {
+                element.classList.add("spin");
+            }
+        }
+
+        function stopSpinning(elementId) {
+            var element = document.getElementById(elementId);
+            if (element) {
+                // Remove the spin class but keep the current rotation
+                element.style.animationPlayState = 'paused';
+            }
+        }
+    </script>
+
+    <!--Bootstrap-->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.3.1/dist/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+    <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.14.7/dist/umd/popper.min.js" integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.3.1/dist/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
+</head>
+
+<body>
+    <div id="app">
+        <svg class="loading-progress">
+            <circle r="40%" cx="50%" cy="50%" />
+            <circle r="40%" cx="50%" cy="50%" />
+        </svg>
+        <div class="loading-progress-text"></div>
+    </div>
+
+    <div id="blazor-error-ui">
+        An unhandled error has occurred.
+        <a href="" class="reload">Reload</a>
+        <a class="dismiss">🗙</a>
+    </div>
+    <script src="_framework/blazor.webassembly.js"></script>
+</body>
+</html>

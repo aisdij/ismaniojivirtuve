@@ -1,0 +1,76 @@
+﻿@using Project.Shared.ResponseModels
+@inject HttpClient webHttpClient
+@inject NavigationManager NavigationManager
+@code {
+    [Parameter]
+    public OrderResponse Order { get; set; }
+
+    private async void SelectCancelOrder()
+    {
+        var response = await webHttpClient.GetAsync($"api/order/status/{Order.Id}");
+
+        if (response.StatusCode == System.Net.HttpStatusCode.SeeOther)
+        {
+            var redirectUrl = await response.Content.ReadAsStringAsync();
+            NavigationManager.NavigateTo(redirectUrl);
+        }
+    }
+
+
+    private string returnMessage;
+
+    protected override void OnParametersSet()
+    {
+        returnMessage = string.Empty; // Clear any previous messages when parameters change
+    }
+
+
+    private async Task SelectReturnButton()
+    {
+        var response = await webHttpClient.GetAsync($"api/order/check-order-date/{Order.Id}");
+        if (Order.fkOrderStatus != OrderStatus.Completed)
+        {
+            returnMessage = "Užsakymas dar neįvykdytas";
+        }
+        if (Order.fkOrderStatus == OrderStatus.Returning)
+        {
+            returnMessage = "Užsakymas jau grąžinamas";
+        }
+        else if (response.IsSuccessStatusCode) 
+        {
+            
+            NavigationManager.NavigateTo($"/order-return-form/{Order.Id}");
+        }
+        else
+        {
+            returnMessage = await response.Content.ReadAsStringAsync(); ;
+        }
+    }
+}
+
+<div class="order-item">
+    <p><strong>Total Price:</strong> @Order.TotalPrice</p>
+    <p><strong>Address:</strong> @Order.Adress</p>
+    <p><strong>City:</strong> @Order.City</p>
+    <p><strong>Postal Code:</strong> @Order.PostalCode</p>
+    <p><strong>Additional Info:</strong> @Order.AdditionalInfo</p>
+    <p><strong>Flat Number:</strong> @Order.FlatNumber</p>
+    <p><strong>Order Status:</strong> @Order.fkOrderStatus</p>
+    <p><strong>Order Date:</strong> @Order.OrderDate.ToString("MM/dd/yyyy")</p>
+    <button @onclick="SelectCancelOrder">Atšaukti</button>
+    <button @onclick="SelectReturnButton">Grąžinti</button>
+    @if (!string.IsNullOrEmpty(returnMessage))
+    {
+        <p class="text-danger">@returnMessage</p>
+    }
+</div>
+
+<style>
+    .order-item {
+        border: 1px solid #ccc;
+        padding: 10px;
+        margin-bottom: 10px;
+    }
+</style>
+
+

@@ -1,0 +1,35 @@
+﻿@page "/shop-item/{id}"
+@using Project.Frontend.Website.Componenets
+@using Project.Frontend.Website.Services;
+@layout Shared.MainLayout
+@inject IWebsiteHttpClient webHttpClient
+
+<PageTitle>Shop Item List</PageTitle>
+
+<div class="d-flex flex-wrap-reverse">
+    <ShopItemComponent ShopItem=@ShopItem />
+</div>
+
+<div>
+    <h1>Rekomenduojame šias prekes:</h1>
+    <div class="d-flex">
+        @foreach (var recommendation in ShopItemRecommendations)
+        {
+            <div class="m-2">
+                <ShopItemComponent ShopItem=@recommendation />
+            </div>
+        }
+    </div>
+</div>
+
+@code{
+    [Parameter] public string id { get; set; }
+    public ShopItemResponse ShopItem { get; set; } = new();
+    public List<ShopItemResponse> ShopItemRecommendations { get; set; } = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        ShopItem = await webHttpClient.DoGetAsync<ShopItemResponse>($"api/shopItems/{id}");
+        ShopItemRecommendations = await webHttpClient.DoGetAsync<List<ShopItemResponse>>($"api/shopItems/recommendations");
+    }
+}

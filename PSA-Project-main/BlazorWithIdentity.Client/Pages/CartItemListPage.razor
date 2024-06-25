@@ -1,0 +1,37 @@
+﻿@page "/cart-items"
+@using Project.Frontend.Website.Componenets
+@using Project.Frontend.Website.Services;
+@layout Shared.MainLayout
+@inject IWebsiteHttpClient webHttpClient
+
+<PageTitle>Tvarkyti Pirkinių Krepšelį</PageTitle>
+
+<div class="d-flex flex-wrap-reverse">
+    @if (CartItems.Count > 0)
+    {
+        @foreach (var cartItem in CartItems)
+        {
+        <CartItemComponent CartItem=@cartItem/>
+        }
+        <br />  
+        <div class="nav-item px-3">
+            <a class="nav-link" href="/confirm-order" Match="NavLinkMatch.All">
+                <h2 class="oi" aria-hidden="true"></h2> Užsakyti
+            </a>
+        </div>
+    }
+
+    @if (CartItems.Count <= 0)
+    {
+        <h1>Nėra prekių</h1>
+    }
+</div>
+
+@code{
+    public List<CartItemResponse> CartItems { get; set; } = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        CartItems = await webHttpClient.DoGetAsync<List<CartItemResponse>>("api/cartItems");
+    }
+}

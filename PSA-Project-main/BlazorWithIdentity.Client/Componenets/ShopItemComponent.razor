@@ -1,0 +1,64 @@
+﻿@using Project.Frontend.Website.Services;
+@using Project.Shared.AuthenticationShared;
+
+@inject IAuthenticationService authenticationService
+@inject NavigationManager navigationManager
+@inject IWebsiteHttpClient webHttpClient
+
+<a href="/shop-item/@ShopItem.Id">
+    <div class="card" style="width: 18rem;">
+        <div class="card-body">
+            <h5 class="card-title">@ShopItem.Name</h5>
+            <p class="card-text">@ShopItem.Description</p>
+            <p class="card-text">@ShopItem.Price</p>
+
+            <EditForm class="form-signin" OnValidSubmit="SelectAddShopItemToCart" Model="cartItemRequest">
+                <DataAnnotationsValidator />
+
+                <div class="form-floating mb-3">
+                    <InputNumber id="inputCount" class="form-control" @bind-Value="cartItemRequest.Count" autofocus placeholder="1" />
+                    <label for="inputEmail">Kiekis</label>
+                    <ValidationMessage For="@(() => cartItemRequest.Count)" />
+                </div>
+
+                <div class="form-floating mb-3">
+                <button @onclick="SelectAddShopItemToCart">Pridėti į krepšelį</button>
+
+                </div>
+            </EditForm>
+
+            @if (Role == "Admin")
+            {
+                <a href="/update-shop-item/@ShopItem.Id">Redaguoti prekę</a>
+                <button @onclick="DeleteShopItem">Naikinti prekę</button>
+            }
+        </div>
+    </div>
+</a>
+
+@code {
+    [Parameter] public required ShopItemResponse ShopItem { get; set; }
+    AddCartItemRequest cartItemRequest { get; set; } = new AddCartItemRequest();
+
+    public string Role = "";
+
+    protected async override Task OnInitializedAsync()
+    {
+        Role = await authenticationService.GetClaimValue(CustomJwtClaims.Role);
+    }
+
+    public async Task DeleteShopItem()
+    {
+        DeleteShopItemRequest request = new() { Id = ShopItem.Id };
+
+        await webHttpClient.DoPostAsync(request, "api/shopItems/delete");
+        navigationManager.NavigateTo(navigationManager.BaseUri, forceLoad: true);
+    }
+
+    public async Task SelectAddShopItemToCart()
+    {
+        cartItemRequest.FkShopItemId = ShopItem.Id;
+        await webHttpClient.DoPostAsync(cartItemRequest, "api/cartItems/add");
+        navigationManager.NavigateTo(navigationManager.BaseUri, forceLoad: true);
+    }
+}

@@ -1,0 +1,16 @@
+﻿@inject IAuthenticationService authenticationService
+@using Project.Shared.AuthenticationShared;
+
+<a href="/shop-item/@ShopItem.Id">
+    <div class="card" style="width: 18rem;">
+        <div class="card-body">
+            <h5 class="card-title">@ShopItem.Name</h5>
+            <p class="card-text">@ShopItem.Description</p>
+            <p class="card-text">@ShopItem.Price</p>
+        </div>
+    </div>
+</a>
+
+@code {
+    [Parameter] public required ShopItemResponse ShopItem { get; set; }
+}
